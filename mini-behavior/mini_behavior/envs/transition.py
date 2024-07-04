@@ -30,7 +30,7 @@ class TransitionEnv(RoomGrid):
             objs=None,
             transition_probs=None,
             num_choose=4,
-            mode='primitive',
+            mode='not_human',
             room_size=8,
             num_rows=2,
             num_cols=2,
@@ -125,6 +125,11 @@ class TransitionEnv(RoomGrid):
     def _end_conditions(self):
         return self.step_count == self.max_steps
 
+    def _reward(self):
+        if self._end_conditions():
+            return 1
+        else:
+            return 0
 
 register(
     id='MiniGrid-TransitionEnv-8x8x4-N2-v0',
@@ -134,5 +139,5 @@ register(
 register(
     id='MiniGrid-TransitionEnv-8x8x4-N2-v1',
     entry_point='mini_behavior.envs:TransitionEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

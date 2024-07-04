@@ -9,7 +9,7 @@ class MovingBoxesToStorageEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             max_steps=1e5,
     ):
@@ -41,7 +41,8 @@ class MovingBoxesToStorageEnv(RoomGrid):
 
         return True
 
-
+    def _reward(self):
+        return 0
 
     def _end_conditions(self):
         cartons = self.objs['carton']
@@ -65,5 +66,5 @@ register(
 register(
     id='MiniGrid-MovingBoxesToStorage-16x16-N2-v1',
     entry_point='mini_behavior.envs:MovingBoxesToStorageEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

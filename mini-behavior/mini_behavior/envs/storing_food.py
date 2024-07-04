@@ -9,7 +9,7 @@ class StoringFoodEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             num_rows=1,
             num_cols=1,
@@ -51,7 +51,8 @@ class StoringFoodEnv(RoomGrid):
         self.put_obj(sugars[0], *countertop_pos[6], 1)
         self.put_obj(sugars[1], *countertop_pos[7], 1)
 
-
+    def _reward(self):
+        return 0
 
     def _end_conditions(self):
         oatmeals = self.objs['oatmeal']
@@ -77,5 +78,5 @@ register(
 register(
     id='MiniGrid-StoringFood-16x16-N2-v1',
     entry_point='mini_behavior.envs:StoringFoodEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

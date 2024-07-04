@@ -10,7 +10,7 @@ class ThrowLeftoversSceneEnv(FloorPlanEnv):
 
     def __init__(
             self,
-            mode='cartesian',
+            mode='human',
             scene_id='rs_int',
             num_objs=None,
             max_steps=1e5,
@@ -100,6 +100,8 @@ class ThrowLeftoversSceneEnv(FloorPlanEnv):
         return True
 
 
+
+# human input env
 register(
     id='MiniGrid-ThrowLeftoversSceneEnv-0x0-N2-v0',
     entry_point='mini_behavior.envs:ThrowLeftoversSceneEnv',

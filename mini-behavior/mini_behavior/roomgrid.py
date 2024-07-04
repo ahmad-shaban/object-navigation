@@ -2,7 +2,7 @@
 
 from .minibehavior import *
 from .utils.globals import COLOR_NAMES
-from mini_bddl import *
+
 
 def reject_next_to(env, pos):
     """
@@ -21,9 +21,12 @@ class Room:
         self,
         top,
         size,
-        row=None,
-        col=None
+        row,
+        col,
+        door_pos = None,
+        name=None
     ):
+        self.name = name
         # Top-left corner and size (tuples)
         self.top = top
         self.size = size
@@ -31,7 +34,7 @@ class Room:
         # List of door objects and door positions
         # Order of the doors is right, down, left, up
         self.doors = [None] * 4
-        self.door_pos = [None] * 4
+        self.door_pos = [None] * 4 if door_pos is None else door_pos
 
         # List of rooms adjacent to this one
         # Order of the neighbors is right, down, left, up
@@ -46,11 +49,11 @@ class Room:
         self.row = row
         self.col = col
 
-    def reset(self):
-        self.doors = [None] * 4
-        self.door_pos = [None] * 4
-        self.neighbors = [None] * 4
-        self.objs = []
+    # def reset(self):
+    #     self.doors = [None] * 4
+    #     self.door_pos = [None] * 4
+    #     self.neighbors = [None] * 4
+    #     self.objs = []
 
     def rand_pos(self, env):
         topX, topY = self.top
@@ -85,39 +88,27 @@ class RoomGrid(MiniBehaviorEnv):
 
     def __init__(
         self,
-        mode='primitive',
+        mode='not_human',
         num_objs=None,
         room_size=10,
         num_rows=2,
         num_cols=2,
-        max_steps=1e4,
-        see_through_walls=True,
+        max_steps=1e5,
+        see_through_walls=False,
         seed=500,
         agent_view_size=7,
-        highlight=True,
-        init_dict=None,
-        dense_reward=False,
+        highlight=True
     ):
-        if init_dict:
-            self.initial_dict = init_dict
-            height = self.initial_dict['Grid']['height']
-            width = self.initial_dict['Grid']['width']
-            # for auto nums
-            self.auto_room_split_dirs = self.initial_dict["Grid"]["auto"]["room_split_dirs"]
-            self.auto_min_room_dim = self.initial_dict["Grid"]["auto"]["min_room_dim"]
-            self.auto_max_num_room = self.initial_dict["Grid"]["auto"]["max_num_room"]
-        else:
-            assert room_size > 0
-            assert room_size >= 3
-            assert num_rows > 0
-            assert num_cols > 0
-            self.room_size = room_size
-            self.num_rows = num_rows
-            self.num_cols = num_cols
+        assert room_size > 0
+        assert room_size >= 3
+        assert num_rows > 0
+        assert num_cols > 0
+        self.room_size = room_size
+        self.num_rows = num_rows
+        self.num_cols = num_cols
 
-            height = (room_size - 1) * num_rows + 1
-            width = (room_size - 1) * num_cols + 1
-            self.initial_dict = None
+        height = (room_size - 1) * num_rows + 1
+        width = (room_size - 1) * num_cols + 1
 
         super().__init__(
             mode=mode,
@@ -128,293 +119,8 @@ class RoomGrid(MiniBehaviorEnv):
             see_through_walls=see_through_walls,
             seed=seed,
             agent_view_size=agent_view_size,
-            highlight=highlight,
-            dense_reward=dense_reward,
+            highlight=highlight
         )
-    
-    def add_walls(self, width, height):
-        # Generate the surrounding walls
-        # self.objs = {}
-        # self.obj_instances = {}
-        self.grid.wall_rect(0, 0, width, height)
-        for dir, (x, y), length in self.floor_plan_walls:
-            if dir == 'horz':
-                self.grid.horz_wall(x, y, length)
-            else:
-                self.grid.vert_wall(x, y, length)
-
-        obj_type = "door"
-        door_count = 0
-        for dir, (x, y), length in self.floor_plan_walls:
-            if door_count >= len(self.room_instances) - 1:
-                break
-            if dir == 'horz' and 0 < y < height - 1:
-                # open_status = self._rand_bool()
-                open_status = False
-                if obj_type not in self.objs:
-                    self.objs[obj_type] = []
-                obj_name = f'{obj_type}_{len(self.objs[obj_type])}'
-                door = Door(dir, is_open=open_status)
-                self.objs[obj_type].append(door)
-                door.id = len(self.obj_instances) + 1
-                self.obj_instances[obj_name] = door
-                self.place_obj(door, (x, y), (length, 1), max_tries=20)
-                door_count += 1
-            elif dir == 'vert' and 0 < x < width - 1:
-                # open_status = self._rand_bool()
-                open_status = False
-                if obj_type not in self.objs:
-                    self.objs[obj_type] = []
-                obj_name = f'{obj_type}_{len(self.objs[obj_type])}'
-                door = Door(dir, is_open=open_status)
-                self.objs[obj_type].append(door)
-                door.id = len(self.obj_instances) + 1
-                self.obj_instances[obj_name] = door
-                self.place_obj(door, (x, y), (1, length), max_tries=20)
-                # self.grid.set(x, doorIdx, door)
-                door_count += 1
-            else:
-                continue
-
-    def _gen_floorplan(self):
-        # floor plan
-        self.floor_plan_walls = []
-        # rooms
-        self.room_instances = []
-
-        # num rooms
-        if self.initial_dict['Grid']['rooms']['num'] is not None:
-            num_room = self.initial_dict['Grid']['rooms']['num']
-        else:
-            num_room = self._rand_int(1, self.auto_max_num_room)
-
-        room_initial = self.initial_dict['Grid']['rooms']['initial']
-
-        # check if generate floor plan automatically or room sizes have been decided
-        auto_floor_plan = True
-        if room_initial and room_initial[0]['top'] is not None:
-            assert len(
-                room_initial) == num_room, 'Please specify all room initials, tops and size'
-            for room_init in room_initial:
-                if room_init['top'] is None or room_init['size'] is None:
-                    raise Exception(
-                        'Please specify all room tops and sizes')
-            auto_floor_plan = False
-
-        if auto_floor_plan:
-            tops, sizes = self._gen_random_floorplan(num_room)
-        
-        for num in range(num_room):
-            if num < len(room_initial):
-                if auto_floor_plan:
-                    top = tops[num]
-                    size = sizes[num]
-                else:
-                    top = room_initial[num]['top']
-                    size = room_initial[num]['size']
-                    self.floor_plan_walls.append(
-                        ('vert', (top[0] - 1, top[1]), size[1] + 1))
-                    self.floor_plan_walls.append(
-                        ('vert', (top[0] + size[0], top[1] - 1), size[1] + 1))
-                    self.floor_plan_walls.append(
-                        ('horz', (top[0] - 1, top[1] - 1), size[0] + 1))
-                    self.floor_plan_walls.append(
-                        ('horz', (top[0], top[1] + size[1]), size[0] + 1))
-            else:
-                top = tops[num]
-                size = sizes[num]
-
-            self._gen_room(top, size)
-    
-    def _gen_random_floorplan(self, room_num):
-        x_min, y_min, x_max, y_max = 1, 1, self.width-2, self.height-2
-        tops = []
-        sizes = []
-        for room_id in range(room_num-1):
-            cur_dir = self._rand_subset(self.auto_room_split_dirs, 1)[0]
-            if cur_dir == 'vert':
-                # Create a vertical splitting wall
-                splitIdx = self._rand_int(
-                    x_min + self.auto_min_room_dim, max(x_min + self.auto_min_room_dim + 1, min(3*(x_min + x_max)/2, x_max - (room_num - room_id - 1) * self.auto_min_room_dim)))
-                self.floor_plan_walls.append(('vert', (splitIdx, y_min), None))
-                tops.append((x_min, y_min))
-                sizes.append((splitIdx - x_min, y_max - y_min + 1))
-                x_min = splitIdx + 1
-            else:
-                # Create a horizontal splitting wall
-                splitIdx = self._rand_int(
-                    y_min + self.auto_min_room_dim, max(y_min + self.auto_min_room_dim + 1, min(3*(y_min + y_max)/2, y_max - (room_num - room_id - 1) * self.auto_min_room_dim)))
-                self.floor_plan_walls.append(('horz', (x_min, splitIdx), None))
-                tops.append((x_min, y_min))
-                sizes.append((x_max - x_min + 1, splitIdx - y_min))
-                # horiz generate room with top and size", splitIdx, top, size)
-                y_min = splitIdx + 1
-        tops.append((x_min, y_min))
-        sizes.append((x_max - x_min + 1, y_max - y_min + 1))
-
-        return tops, sizes
-
-    def _gen_room(self, top, size):
-        room = Room(top=top, size=size)
-        self.room_instances.append(room)
-
-    def _gen_random_objs(self):
-        # objs
-        self.objs = {}
-        self.obj_instances = {}
-
-        self.add_walls(self.width, self.height)
-
-        for room_id, room in enumerate(self.room_instances):
-            # Generate furs and objs for the room
-            if room_id < len(self.initial_dict['Grid']['rooms']['initial']) and self.initial_dict['Grid']['rooms']['initial'][room_id]['furnitures']['num'] is not None:
-                num_furs = self.initial_dict['Grid']['rooms']['initial'][room_id]['furnitures']['num']
-            else:
-                num_furs = self._rand_int(
-                    1, max(2, int(room.size[0]*room.size[1]/12)))
-
-            if room_id < len(self.initial_dict['Grid']['rooms']['initial']) and self.initial_dict['Grid']['rooms']['initial'][room_id]['furnitures'] is not None:
-                furniture_initial = self.initial_dict['Grid']['rooms']['initial'][room_id]['furnitures']['initial']
-            else:
-                furniture_initial = []
-            # room.num_furs = num_furs
-            # room.self_id = room_id
-
-            for fur_id in range(num_furs):
-                if fur_id < len(furniture_initial) and furniture_initial[fur_id]['type'] is not None:
-                    furniture_type = furniture_initial[fur_id]['type']
-                else:
-                    furniture_type = self._rand_subset(
-                        FURNITURE, 1)[0]
-
-                # generate furniture instance
-                if furniture_type not in self.objs:
-                    self.objs[furniture_type] = []
-                fur_name = f'{furniture_type}_{len(self.objs[furniture_type])}'
-                if furniture_type in OBJECT_CLASS.keys():
-                    fur_instance = OBJECT_CLASS[furniture_type](
-                        name=fur_name)
-                else:
-                    fur_instance = WorldObj(furniture_type, None, fur_name)
-
-                fur_instance.in_room = room
-                self.objs[furniture_type].append(fur_instance)
-                fur_instance.id = len(self.obj_instances) + 1
-                self.obj_instances[fur_name] = fur_instance
-                room.objs.append(fur_instance)
-
-                # place furniture
-                if fur_id < len(furniture_initial) and furniture_initial[fur_id]['pos'] is not None:
-                    pos = self.place_obj_pos(
-                        fur_instance, pos=furniture_initial[fur_id]['pos'], top=room.top, size=room.size)
-                else:
-                    pos = self.place_obj(fur_instance, room.top, room.size)
-
-                # set furniture states
-                if fur_id < len(furniture_initial) and furniture_initial[fur_id]['state'] is not None:
-                    states = furniture_initial[fur_id]['state']
-                    for state_name, flag in states:
-                        if flag:
-                            fur_instance.states[state_name].set_value(
-                                True)
-                else:
-                    num_ability = self._rand_int(0, len(ABILITIES))
-                    abilities = self._rand_subset(
-                        ABILITIES, num_ability)
-                    for ability in abilities:
-                        if ability in list(fur_instance.states.keys()):
-                            fur_instance.states[ability].set_value(
-                                True)
-                fur_instance.update(self)
-                # for every furniture, generate objs on it
-                if furniture_type not in FURNITURE_CANNOT_ON and fur_instance.width * fur_instance.height > 1:
-                    if fur_id < len(furniture_initial) and furniture_initial[fur_id]['objs'] is not None:
-                        obj_initial = furniture_initial[fur_id]['objs']['initial']
-                        if furniture_initial[fur_id]['objs']['num'] is not None:
-                            num_objs = furniture_initial[fur_id]['objs']['num']
-                        else:
-                            num_objs = max(len(obj_initial), self._rand_int(
-                                1, max(1, fur_instance.width * fur_instance.height)))
-                    else:
-                        num_objs = self._rand_int(
-                            1, max(1, fur_instance.width * fur_instance.height))
-                        obj_initial = []
-
-                    obj_poses = set()
-                    for obj_id in range(num_objs):
-                        if obj_id < len(obj_initial) and obj_initial[obj_id]['type'] is not None:
-                            obj_type = obj_initial[obj_id]['type']
-                        else:
-                            OBJECT_LIST = [x for x in OBJECTS if x not in FURNITURE]
-                            obj_type = self._rand_subset(
-                                OBJECT_LIST, 1)[0]
-                        if obj_type not in self.objs:
-                            self.objs[obj_type] = []
-                        obj_name = f'{obj_type}_{len(self.objs[obj_type])}_{fur_instance.name}'
-
-                        # generate obj instance
-                        if obj_type in OBJECT_CLASS.keys():
-                            obj_instance = OBJECT_CLASS[obj_type](
-                                name=obj_name)
-                        else:
-                            obj_instance = WorldObj(
-                                obj_type, None, obj_name)
-                        obj_instance.in_room = room
-                        obj_instance.on_fur = fur_instance
-
-                        self.objs[obj_type].append(obj_instance)
-                        obj_instance.id = len(self.obj_instances) + 1
-                        self.obj_instances[obj_name] = obj_instance
-                        room.objs.append(obj_instance)
-
-                        # put obj instance
-                        if obj_id < len(obj_initial) and obj_initial[obj_id]['pos'] is not None:
-                            pos = obj_initial[obj_id]['pos']
-                            self.put_obj(obj_instance, *pos)
-                            obj_poses.add(pos)
-                        else:
-                            pos = self._rand_subset(
-                                fur_instance.all_pos, 1)[0]
-                            while pos in obj_poses:
-                                pos = self._rand_subset(
-                                    fur_instance.all_pos, 1)[0]
-                            self.put_obj(obj_instance, *pos)
-                            obj_poses.add(pos)
-
-                        # set obj states
-                        if obj_id < len(obj_initial) and obj_initial[obj_id]['state'] is not None:
-                            states = obj_initial[obj_id]['state']
-                            for state_name, flag in states:
-                                if flag:
-                                    obj_instance.states[state_name].set_value(
-                                        True)
-                        else:
-                            num_ability = self._rand_int(0, len(ABILITIES))
-                            abilities = self._rand_subset(
-                                ABILITIES, num_ability)
-                            for ability in abilities:
-                                if ability in list(obj_instance.states.keys()):
-                                    obj_instance.states[ability].set_value(
-                                        True)
-                        obj_instance.update(self)
-
-    def _gen_objs(self):
-        # Gen obj instances from obj dict
-        if not self.initial_dict:
-            self._gen_env_objs()
-        else:
-            for room in self.room_instances:
-                for fur in room.furnitures:
-                    self.place_obj(fur, room.top, room.size)
-                    if fur.type not in FURNITURE_CANNOT_ON:
-                        fur_pos = self._rand_subset(
-                            fur.all_pos, len(fur.objects))
-                        for i, obj in enumerate(fur.objects):
-                            self.put_obj(obj, *fur_pos[i])
-                            abilities = self._rand_subset(ABILITIES, 3)
-                            for ability in abilities:
-                                if ability in list(obj.states.keys()):
-                                    obj.states[ability].set_value(True)
 
     def room_num_from_pos(self, x, y):
         i = x // (self.room_size-1)
@@ -446,33 +152,16 @@ class RoomGrid(MiniBehaviorEnv):
         assert j < self.num_rows
         return self.room_grid[j][i]
 
-    def reset(self):
-        super().reset()
-        if self.initial_dict:
-            for room in self.room_instances:
-                    room.reset()
-        else:
-            for row in self.room_grid:
-                for room in row:
-                    room.reset()
-                    
-        return self.gen_obs()
-
     def _gen_grid(self, width, height):
-        if not self.initial_dict:
-            self._gen_rooms(width, height)
-            self._gen_objs()
-            self.place_agent()
-            self.connect_all()
-        else:
-            self.grid = BehaviorGrid(width, height)
-            self._gen_floorplan()
-            self._gen_random_objs()
-            self.place_agent_auto()
+        self.grid = BehaviorGrid(width, height)
+        self._gen_rooms(width, height)
+        self._gen_objs()
+        self.place_agent()
+        self.connect_all()
 
     def _gen_rooms(self, width, height):
         # Create the grid
-        self.grid = BehaviorGrid(width, height)
+        # self.grid = BehaviorGrid(width, height)
         self.room_grid = [] # list of lists
         self.doors = []
 
@@ -537,22 +226,21 @@ class RoomGrid(MiniBehaviorEnv):
 
         return obj, pos
 
-    # def add_object(self, i, j, kind=None, color=None):
-    #     """
-    #     Add a new object to room (i, j)
-    #     """
-    #
-    #     if kind is None:
-    #         kind = self._rand_elem(['key', 'ball', 'box'])
-    #
-    #     if color is None:
-    #         color = self._rand_color()
-    #
-    #     # TODO: we probably want to add an Object.make helper function
-    #     assert kind in OBJECTS
-    #     obj = OBJECT_CLASS[kind]()
-    #
-    #     return self.place_in_room(i, j, obj)
+    def put_in_room(self, i, j, pos, obj):
+        """
+        Add an existing object to room (i, j)
+        """
+
+        room = self.get_room(i, j)
+        pos = self.put_obj(
+            obj,
+            room.top[0] + pos[0],
+            room.top[1] + pos[1],
+        )
+
+        room.objs.append(obj)
+
+        return obj, pos
 
     def add_door(self, i, j, door_idx=None, color=None, locked=None):
         """
@@ -584,7 +272,9 @@ class RoomGrid(MiniBehaviorEnv):
         self.doors.append(door)
 
         pos = room.door_pos[door_idx]
-        self.grid.set(*pos, door)
+        # self.grid.set(*pos, door)
+        cell = self.grid.get(*pos)
+        cell.reset()
         door.cur_pos = pos
 
         neighbor = room.neighbors[door_idx]
@@ -629,32 +319,6 @@ class RoomGrid(MiniBehaviorEnv):
         room.doors[wall_idx] = True
         neighbor.doors[(wall_idx+2) % 4] = True
 
-    def place_agent_auto(
-        self,
-        top=None,
-        size=None,
-        rand_dir=True,
-        max_tries=math.inf
-    ):
-        """
-        Set the agent's starting point at an empty position in the grid
-        """
-        
-        if self.initial_dict['Grid']['agents']['pos'] is None:
-            pos = self.place_obj(None, top, size, max_tries=max_tries)
-            self.agent_pos = (pos[0], pos[1])
-        else:
-            pos = self.initial_dict['Grid']['agents']['pos']
-            self.place_obj_pos(None, pos, top, size)
-            self.agent_pos = (pos[0], pos[1])
-
-        if self.initial_dict['Grid']['agents']['dir'] is None:
-            self.agent_dir = self._rand_int(0, 4)
-        else:
-            self.agent_dir = self.initial_dict['Grid']['agents']['dir']
-
-        return pos
-
     def place_agent(self, i=None, j=None, rand_dir=True):
         """
         Place the agent in a room
@@ -664,7 +328,7 @@ class RoomGrid(MiniBehaviorEnv):
             i = self._rand_int(0, self.num_cols)
         if j is None:
             j = self._rand_int(0, self.num_rows)
-
+        
         room = self.room_grid[j][i]
 
         # Find a position that is not right in front of an object
@@ -674,6 +338,12 @@ class RoomGrid(MiniBehaviorEnv):
                 break
 
         return self.agent_pos
+
+    def _rand_int(self, low, high):
+        """
+        Generate random integer in [low,high[
+        """
+        return self.np_random.random_integers(low, high-1, size=1)[0]
 
     def connect_all(self, door_colors=COLOR_NAMES, max_itrs=5000):
         """

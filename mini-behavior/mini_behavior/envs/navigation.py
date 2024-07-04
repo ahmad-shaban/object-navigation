@@ -9,7 +9,7 @@ class NavigationEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             num_rows=1,
             num_cols=1,
@@ -52,17 +52,23 @@ class NavigationEnv(RoomGrid):
         else:
             return False
 
+    def _reward(self):
+        if self._end_conditions():
+            return 1
+        else:
+            return 0
+
 
 class NavigationEnv16x16_Human(NavigationEnv):
     def __init__(self):
-        super().__init__(mode='cartesian',
+        super().__init__(mode='human',
                          room_size=16,
                          )
 
 
 class NavigationMultiEnv16x16_Human(NavigationEnv):
     def __init__(self):
-        super().__init__(mode='cartesian',
+        super().__init__(mode='human',
                          room_size=16,
                          num_rows=2,
                          num_cols=2
@@ -71,7 +77,7 @@ class NavigationMultiEnv16x16_Human(NavigationEnv):
 
 class NavigationMultiEnv16x16_RL(NavigationEnv):
     def __init__(self):
-        super().__init__(mode='primitive',
+        super().__init__(mode='not_human',
                          room_size=16,
                          num_rows=2,
                          num_cols=2
@@ -79,7 +85,7 @@ class NavigationMultiEnv16x16_RL(NavigationEnv):
 
 class NavigationMultiEnv8x8_Human(NavigationEnv):
     def __init__(self):
-        super().__init__(mode='cartesian',
+        super().__init__(mode='human',
                          room_size=8,
                          num_rows=2,
                          num_cols=2
@@ -103,11 +109,11 @@ register(
 # RL agent env
 register(
     id='MiniGrid-NavigationMulti-16x16-N2-v0',
-    entry_point='mini_behavior.envs:NavigationMultiEnv16x16_RL'
+    entry_point='mini_behavior.envs:NavigatioMultiEnv16x16_RL'
 )
 
 # human control env
 register(
     id='MiniGrid-NavigationMulti-8x8-N1-v0',
-    entry_point='mini_behavior.envs:NavigationMultiEnv8x8_Human'
+    entry_point='mini_behavior.envs:NavigatioMultiEnv8x8_Human'
 )

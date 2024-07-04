@@ -14,33 +14,20 @@ class TwoRoomNavigationEnv(RoomGrid):
         right = 1
         forward = 2
 
-        pickup_0 = 9
-        pickup_1 = 10
-        pickup_2 = 11
-        drop_0 = 12
-        drop_1 = 13
-        drop_2 = 14
-
     def __init__(
             self,
             max_steps=1e5,
     ):
-        self.mode = 'primitive'
-        super().__init__(mode=self.mode,
+        super().__init__(mode='human',
                          num_objs={'ball': 1},
                          room_size=8,
                          num_rows=1,
                          num_cols=2,
                          max_steps=max_steps,
-                         see_through_walls=False,
+                         see_through_walls=True,
                          agent_view_size=3,
                          highlight=False
                          )
-
-        self.actions = TwoRoomNavigationEnv.Actions
-        self.action_space = spaces.Discrete(len(self.actions))
-
-        # print(list(self.actions), '\n', len(self.actions))
 
     def _gen_grid(self, width, height):
         self._gen_rooms(width, height)
@@ -55,10 +42,13 @@ class TwoRoomNavigationEnv(RoomGrid):
             self.place_obj(obj)
 
     def _end_conditions(self):
-        ball: WorldObj = self.objs['ball'][0]
-        if ball.check_abs_state(env=self, state='inhandofrobot'):
-            return True
         return False
+
+    def _reward(self):
+        if self._end_conditions():
+            return 1
+        else:
+            return 0
 
 
 register(

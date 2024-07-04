@@ -241,7 +241,7 @@ class NextTo(RelativeObjectState):
 # TODO: fix for 3D
 class OnFloor(AbsoluteObjectState):
     def _update(self, env=None):
-        if self.obj.check_abs_state(env, 'inhandofrobot'):
+        if self.obj.cur_pos is None or self.obj.check_abs_state(env, 'inhandofrobot'):
             self.value = False
         else:
             self.value = True
@@ -303,6 +303,9 @@ class CleaningTool(ObjectProperty):
 class HeatSourceOrSink(ObjectProperty):
     def __init__(self, obj, key):
         super(HeatSourceOrSink, self).__init__(obj, key)
+
+
+# class ObjectsInFOVOfRobot(AbsoluteObjectState):
 
 
 class Slicer(ObjectProperty):

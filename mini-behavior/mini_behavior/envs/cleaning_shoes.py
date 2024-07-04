@@ -9,7 +9,7 @@ class CleaningShoesEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=8,
             num_rows=1,
             num_cols=1,
@@ -85,7 +85,8 @@ class CleaningShoesEnv(RoomGrid):
 
         return True
 
-
+    def _reward(self):
+        return 0
 
     def _end_conditions(self):
         shoes = self.objs['shoe']
@@ -108,5 +109,5 @@ register(
 register(
     id='MiniGrid-CleaningShoes-16x16-N2-v1',
     entry_point='mini_behavior.envs:CleaningShoesEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

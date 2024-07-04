@@ -9,7 +9,7 @@ class BoxingBooksUpForStorageEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             num_rows=1,
             num_cols=1,
@@ -46,7 +46,8 @@ class BoxingBooksUpForStorageEnv(RoomGrid):
         self.put_obj(book[5], *shelf_pos[0], 2)
         self.put_obj(book[6], *shelf_pos[1], 2)
 
-
+    def _reward(self):
+        return 0
 
     def _end_conditions(self):
         book = self.objs['book']
@@ -69,5 +70,5 @@ register(
 register(
     id='MiniGrid-BoxingBooksUpForStorage-16x16-N2-v1',
     entry_point='mini_behavior.envs:BoxingBooksUpForStorageEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

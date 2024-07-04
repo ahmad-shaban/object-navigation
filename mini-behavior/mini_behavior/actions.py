@@ -120,7 +120,6 @@ class Drop(BaseAction):
 
         fwd_pos = self.env.front_pos
         dims = self.drop_dims(fwd_pos)
-        obj.available_dims = dims
 
         return dims != []
 
@@ -175,8 +174,6 @@ class DropIn(BaseAction):
 
         fwd_pos = self.env.front_pos
         dims = self.drop_dims(fwd_pos)
-        obj.available_dims = dims
-
         return dims != []
 
     def do(self, obj, dim):
@@ -213,11 +210,6 @@ class Pickup(BaseAction):
         if not super().can(obj):
             return False
 
-        # For primitive action type, can only carry one object at a time
-        if len(self.env.carrying) != 0 and self.env.mode == "primitive":
-            assert len(self.env.carrying) == 1
-            return False
-
         # cannot pickup if carrying
         if obj.check_abs_state(self.env, 'inhandofrobot'):
             return False
@@ -241,12 +233,6 @@ class Pickup(BaseAction):
 
         # update cur_pos of obj
         obj.update_pos(np.array([-1, -1]))
-
-        # We need to remove "inside"
-        fwd_pos = self.env.front_pos
-        furniture = self.env.grid.get_furniture(*fwd_pos, dim)
-        if furniture is not None:
-            obj.states['inside'].set_value(furniture, False)
 
         # check dependencies
         assert obj.check_abs_state(self.env, 'inhandofrobot')

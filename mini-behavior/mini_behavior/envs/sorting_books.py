@@ -9,7 +9,7 @@ class SortingBooksEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             num_rows=1,
             num_cols=1,
@@ -42,7 +42,8 @@ class SortingBooksEnv(RoomGrid):
         self.put_obj(book[1], *table_pos[0], 2)
         self.put_obj(hardback[1], *table_pos[1], 2)
 
-
+    def _reward(self):
+        return 0
 
     def _end_conditions(self):
         book = self.objs['book']
@@ -66,5 +67,5 @@ register(
 register(
     id='MiniGrid-SortingBooks-16x16-N2-v1',
     entry_point='mini_behavior.envs:SortingBooksEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

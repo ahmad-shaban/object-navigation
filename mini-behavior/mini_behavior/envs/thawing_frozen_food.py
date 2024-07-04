@@ -9,7 +9,7 @@ class ThawingFrozenFoodEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             num_rows=1,
             num_cols=1,
@@ -48,11 +48,13 @@ class ThawingFrozenFoodEnv(RoomGrid):
         for obj in date + olive + fish:
             obj.states['inside'].set_value(electric_refrigerator, True)
 
-
+    def _reward(self):
+        return 0
 
     def _init_conditions(self):
         for obj in self.objs['date'] + self.objs['olive'] + self.objs['fish']:
             assert obj.check_abs_state(self, 'freezable')
+
 
     def _end_conditions(self):
         date = self.objs['date'][0]
@@ -72,7 +74,7 @@ class ThawingFrozenFoodEnv(RoomGrid):
             if not fish.check_rel_state(self, sink, 'nextto'):
                 return False
 
-        if not olive.check_rel_state(self, sink, 'nextto'):
+        if not olive.check_rel_state(self, sink, 'nexxto'):
             return False
 
         return True
@@ -88,5 +90,5 @@ register(
 register(
     id='MiniGrid-ThawingFrozenFood-16x16-N2-v1',
     entry_point='mini_behavior.envs:ThawingFrozenFoodEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

@@ -9,7 +9,7 @@ class SettingUpCandlesEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             max_steps=1e5,
     ):
@@ -47,7 +47,8 @@ class SettingUpCandlesEnv(RoomGrid):
         for obj in candle[3:]:
             obj.states['inside'].set_value(box[1], True)
 
-
+    def _reward(self):
+        return 0
 
     def _end_conditions(self):
         candle = self.objs['candle']
@@ -74,5 +75,5 @@ register(
 register(
     id='MiniGrid-SettingUpCandles-16x16-N2-v1',
     entry_point='mini_behavior.envs:SettingUpCandlesEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

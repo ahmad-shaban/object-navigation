@@ -9,7 +9,7 @@ class ThrowingAwayLeftoversEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             num_rows=1,
             num_cols=1,
@@ -101,38 +101,43 @@ class ThrowingAwayLeftoversEnv(RoomGrid):
                 return False
         return True
 
+# non human input env
 register(
     id='MiniGrid-ThrowingAwayLeftovers-16x16-N2-v0',
     entry_point='mini_behavior.envs:ThrowingAwayLeftoversEnv'
 )
 
+# human input env
 register(
     id='MiniGrid-ThrowingAwayLeftovers-16x16-N2-v1',
     entry_point='mini_behavior.envs:ThrowingAwayLeftoversEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )
 
+# non-human input env
 register(
     id='MiniGrid-ThrowingAwayLeftoversFour-8x8-N2-v0',
     entry_point='mini_behavior.envs:ThrowingAwayLeftoversEnv',
-    kwargs={'mode': 'primitive',
+    kwargs={'mode': 'not_human',
             'room_size': 8,
             'num_rows': 2,
             'num_cols': 2}
 )
 
+# human input env
 register(
     id='MiniGrid-ThrowingAwayLeftoversFour-8x8-N2-v1',
     entry_point='mini_behavior.envs:ThrowingAwayLeftoversEnv',
-    kwargs={'mode': 'cartesian',
+    kwargs={'mode': 'human',
             'room_size': 8,
             'num_rows': 2,
             'num_cols': 2}
 )
 
+# non human input env,
 register(
     id='MiniGrid-ThrowingAwayLeftovers-8x8-N2-v0',
     entry_point='mini_behavior.envs:ThrowingAwayLeftoversEnv',
-    kwargs={'mode': 'primitive',
+    kwargs={'mode': 'not_human',
             'room_size': 8}
 )

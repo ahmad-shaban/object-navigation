@@ -9,7 +9,7 @@ class LayingWoodFloorsEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             num_rows=1,
             num_cols=1,
@@ -38,7 +38,8 @@ class LayingWoodFloorsEnv(RoomGrid):
 
         return True
 
-
+    def _reward(self):
+        return 0
 
     def _end_conditions(self):
         plywood = self.objs['plywood']
@@ -72,5 +73,5 @@ register(
 register(
     id='MiniGrid-LayingWoodFloors-16x16-N2-v1',
     entry_point='mini_behavior.envs:LayingWoodFloorsEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

@@ -9,7 +9,7 @@ class PreparingSaladEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             num_rows=1,
             num_cols=1,
@@ -65,7 +65,8 @@ class PreparingSaladEnv(RoomGrid):
         plate[1].states['dustyable'].set_value(False)
         self.put_obj(carving_knife, *cabinet_pos[2], 0)
 
-
+    def _reward(self):
+        return 0
 
     def _end_conditions(self):
         lettuces = self.objs['lettuce']
@@ -130,5 +131,5 @@ register(
 register(
     id='MiniGrid-PreparingSalad-16x16-N2-v1',
     entry_point='mini_behavior.envs:PreparingSaladEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

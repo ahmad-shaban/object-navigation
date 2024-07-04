@@ -11,7 +11,7 @@ class PreparingSaladFloorplanEnv(FloorPlanEnv):
 
     def __init__(
             self,
-            mode='cartesian',
+            mode='human',
             scene_id='rs_int',
             num_objs=None,
             max_steps=1e5,
@@ -73,7 +73,8 @@ class PreparingSaladFloorplanEnv(FloorPlanEnv):
         plate[1].states['dustyable'].set_value(False)
         self.put_obj(carving_knife, *cabinet_pos[2], 0)
 
-
+    def _reward(self):
+        return 0
 
     def _end_conditions(self):
         lettuces = self.objs['lettuce']
@@ -138,5 +139,5 @@ register(
 register(
     id='MiniGrid-PreparingSaladFloorplan-16x16-N2-v1',
     entry_point='mini_behavior.envs:PreparingSaladFloorplanEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

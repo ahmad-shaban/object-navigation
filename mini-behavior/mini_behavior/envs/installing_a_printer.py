@@ -11,7 +11,7 @@ class InstallingAPrinterEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             num_rows=1,
             num_cols=1,
@@ -50,6 +50,9 @@ class InstallingAPrinterEnv(RoomGrid):
 
         return True
 
+    def _reward(self):
+        return 0
+
     def _end_conditions(self):
         printer = self.objs['printer'][0]
         table = self.objs['table'][0]
@@ -60,25 +63,15 @@ class InstallingAPrinterEnv(RoomGrid):
             return False
 
 
+# non human input env
 register(
     id='MiniGrid-InstallingAPrinter-16x16-N2-v0',
     entry_point='mini_behavior.envs:InstallingAPrinterEnv'
 )
 
-register(
-    id='MiniGrid-InstallingAPrinter-8x8-N2-v0',
-    entry_point='mini_behavior.envs:InstallingAPrinterEnv',
-    kwargs={"room_size": 8, "max_steps": 1000}
-)
-
-register(
-    id='MiniGrid-InstallingAPrinter-6x6-N2-v0',
-    entry_point='mini_behavior.envs:InstallingAPrinterEnv',
-    kwargs={"room_size": 6, "max_steps": 1000}
-)
-
+# human input env
 register(
     id='MiniGrid-InstallingAPrinter-16x16-N2-v1',
     entry_point='mini_behavior.envs:InstallingAPrinterEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

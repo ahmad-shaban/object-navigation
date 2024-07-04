@@ -9,7 +9,7 @@ class OrganizingFileCabinetEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             num_rows=1,
             num_cols=1,
@@ -79,7 +79,8 @@ class OrganizingFileCabinetEnv(RoomGrid):
 
         return True
 
-
+    def _reward(self):
+        return 0
 
     def _end_conditions(self):
         chair = self.objs['chair'][0]
@@ -113,5 +114,5 @@ register(
 register(
     id='MiniGrid-OrganizingFileCabinet-16x16-N2-v1',
     entry_point='mini_behavior.envs:OrganizingFileCabinetEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )

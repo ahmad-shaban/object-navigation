@@ -9,7 +9,7 @@ class CleaningACarEnv(RoomGrid):
 
     def __init__(
             self,
-            mode='primitive',
+            mode='not_human',
             room_size=16,
             num_rows=1,
             num_cols=1,
@@ -70,7 +70,8 @@ class CleaningACarEnv(RoomGrid):
 
         return True
 
-
+    def _reward(self):
+        return 0
 
     def _end_conditions(self):
         car = self.objs['car'][0]
@@ -94,5 +95,5 @@ register(
 register(
     id='MiniGrid-CleaningACar-16x16-N2-v1',
     entry_point='mini_behavior.envs:CleaningACarEnv',
-    kwargs={'mode': 'cartesian'}
+    kwargs={'mode': 'human'}
 )
