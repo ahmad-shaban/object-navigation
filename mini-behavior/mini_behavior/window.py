@@ -98,8 +98,8 @@ class Window(Window):
                 if obj.name not in carrying and obj.type != 'door':
                     on_grid.append(obj.name)
 
-        gen_inv(self.on_grid_ax, on_grid)
-        gen_inv(self.carrying_ax, carrying)
+        # gen_inv(self.on_grid_ax, on_grid)
+        # gen_inv(self.carrying_ax, carrying)
 
         self.on_grid_ax.set_title('on grid', fontsize=8, pad=3)
         self.carrying_ax.set_title('carrying', fontsize=8, pad=3)

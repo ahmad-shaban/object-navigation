@@ -82,6 +82,9 @@ def step(action):
 
 def key_handler_primitive(event):
     print('pressed', event.key)
+    if event.key == 'backspace':
+        reset()
+        return
     if event.key == 'escape':
         window.close()
         return

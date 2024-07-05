@@ -34,13 +34,13 @@ class distance_rw(rewarder):
 
     def get_reward(self, env):  # env: NavigateToObj
         new_agent_pos = env.agent_pos
-        value = self.grid[new_agent_pos[1], new_agent_pos[0]]\
-            - self.grid[self.agent_pos[1], self.agent_pos[0]]
+        value = self.grid[new_agent_pos[1], new_agent_pos[0]] \
+                - self.grid[self.agent_pos[1], self.agent_pos[0]]
         self.agent_pos = new_agent_pos
         if value > 0:
-            value *=0.9
+            value *= 0.9
         elif value < 0:
-            value *=0.5
+            value *= 0.5
         return value
 
     def reset(self, env):  # env: NavigateToObj
@@ -55,14 +55,13 @@ class distance_rw(rewarder):
         :param env:
         :return:
         """
-        self.goals_pos = []
-        self.goals: [WorldObj] = env.objs[env.goal_obj]
         self.agent_pos = env.agent_pos
-
         self._build_grid(env)
 
         # show the grid as heat map using matplotlib
-        # plt.imshow(self.grid, cmap='hot', interpolation='nearest')
+        # grid_to_show = self.grid.copy()
+        # grid_to_show[self.grid < 0] = 0
+        # plt.imshow(grid_to_show, cmap='spring', interpolation='nearest')
         # plt.show()
         # print(self.grid)
 
@@ -74,7 +73,7 @@ class distance_rw(rewarder):
         """
         self.grid = np.zeros((env.height, env.width))
 
-        self.values = {'obstacle': -20, 'goal': 20}
+        self.values = {'obstacle': -20, 'goal': env.width + env.height}
 
         # 1) assign -20 for all cells containing obstacles
         for i in range(env.width):
@@ -83,20 +82,13 @@ class distance_rw(rewarder):
                     self.grid[j, i] = self.values['obstacle']
 
         # 2) loop over goals and assign the largest value to the cells containing the goal object
-        for goal in self.goals:
-            # if it is furniture, we need to assign the value to the cells containing the furniture
-            if goal.is_furniture():
-                for pos in goal.all_pos:
-                    self.grid[pos[::-1]] = self.values['goal']
-                    self.goals_pos.append(pos[::-1])
-            else:
-                self.grid[goal.init_pos[::-1]] = self.values['goal']
-                self.goals_pos.append(goal.init_pos[::-1])
+        for goal_pos in env.target_poses:
+            self.grid[goal_pos[::-1]] = self.values['goal']
 
         # 3) assign decreasing values to cells based on the steps away from the goals
-        for goal_pos in self.goals_pos:
+        for goal_pos in env.target_poses:
             # print(goal_pos)
-            self._bfs_custom(goal_pos[0], goal_pos[1], 20)
+            self._bfs_custom(goal_pos[1], goal_pos[0], self.values['goal'])
 
     def _bfs_custom(self, x, y, value):
         step = 1
@@ -113,6 +105,7 @@ class distance_rw(rewarder):
                 new_x, new_y = x + dx, y + dy
                 if (new_x, new_y) in visited_cells:
                     continue
+                visited_cells.add((new_x, new_y))
 
                 if (0 <= new_x < self.grid.shape[1] and 0 <= new_y < self.grid.shape[0]) \
                         and (self.grid[new_x, new_y] not in self.values.values()):
@@ -137,7 +130,7 @@ class steps_rw(rewarder):
 
 
 class composite_rw(rewarder):
-    def __init__(self, rw_list: [rewarder]=[]):
+    def __init__(self, rw_list: [rewarder] = []):
         super().__init__()
         self.rw_list = rw_list
 

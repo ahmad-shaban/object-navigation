@@ -3,9 +3,10 @@
 import pickle as pkl
 import argparse
 from gym_minigrid.wrappers import *
-from mini_behavior.mini_behavior.window import Window
-from mini_behavior.mini_behavior.utils.save import get_step, save_demo
+from mini_behavior.window import Window
+from mini_behavior.utils.save import get_step, save_demo
 import numpy as np
+from mini_behavior.envs import *
 
 # Size in pixels of a tile in the full-scale human view
 TILE_PIXELS = 32
@@ -110,7 +111,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "--env",
     help="gym environment to load",
-    default='MiniGrid-PSGFourRooms-32x32-N2-v0'
+    default='MiniGrid-FixedEnv-32x32-N2-v0'
 )
 parser.add_argument(
     "--seed",

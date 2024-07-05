@@ -10,9 +10,7 @@ from mini_behavior.register import register
 from mini_behavior.sampling import *
 from object_nav.envs.igridson.graphs import NodeType, RECIPROCAL_EDGE_TYPES
 from object_nav.envs.igridson.igridson_utils import make_scene_sampler_and_evolver_
-
-
-TILE_PIXELS = 32
+from object_nav.rewarder.rewarder import *
 
 EDGE_TYPE_TO_FUNC = {
     "onTop": put_ontop,
@@ -42,6 +40,8 @@ class SMGFixedEnv(FixedEnv):
         self.initialized = False
         self.set_goal_icon = set_goal_icon
 
+        self.rewarder = composite_rw([distance_rw(), steps_rw()])
+
         super().__init__(num_objs=num_objs, agent_view_size=7)
 
     def validate_scene(self):
@@ -62,7 +62,12 @@ class SMGFixedEnv(FixedEnv):
         return obs, reward, done, info
 
     def _reward(self):
-        return -1
+        if self._end_conditions():
+            return 1000
+        else:
+            reward = self.rewarder.get_reward(self)
+            self.previous_progress = reward
+            return reward
 
     def _gen_objs(self):
         super()._gen_objs()
@@ -70,8 +75,7 @@ class SMGFixedEnv(FixedEnv):
             self.graph_to_grid()
 
     def _set_obs_space(self):
-        assert self.mission_mode in ['one_hot',
-                                     'int'], "Only two modes supported: one hot or integer."
+        assert self.mission_mode in ['one_hot', 'int'], "Only two modes supported: one hot or integer."
 
         if self.mission_mode == 'int':
             mission_observation_space = spaces.Discrete(len(IDX_TO_OBJECT))
@@ -106,6 +110,7 @@ class SMGFixedEnv(FixedEnv):
         })
 
     def reset(self):
+        self.overlap_disable()
         # Hack around nightmare inheritance chain
         if not self.initialized:
             self._set_obs_space()
@@ -157,7 +162,7 @@ class SMGFixedEnv(FixedEnv):
 
         # if self.node_to_obj is not None:
         #     self.evolve()
-
+        self.rewarder.reset(self)
         return obs
 
     def get_num_objs(self):
@@ -266,13 +271,6 @@ class SMGFixedEnv(FixedEnv):
             self.mission = np.eye(len(IDX_TO_OBJECT))[obj_idx]
         elif self.mission_mode == 'int':
             self.mission = obj_idx
-        elif self.mission_mode == 'word_vec':
-            model_inps = obj_label.split('_')
-            vec = np.zeros((25))
-            for inp in model_inps:
-                vec += self.word2vec_model.get_vector(inp, norm=True)
-            vec /= len(model_inps)
-            self.mission = vec
         else:
             assert "Missing obs mode"
 
@@ -296,6 +294,10 @@ class SMGFixedEnv(FixedEnv):
         self.goal_obj_label = self.node_to_obj[node].type
         self.set_mission(self.goal_obj_label)
 
+    def overlap_disable(self):
+        for obj in self.obj_instances.values():
+            obj.can_overlap = False
+
 
 @hydra.main(version_base=None, config_path=object_nav.CONFIG_PATH, config_name="igridson_scenes")
 def registration(cfg):
@@ -305,8 +307,12 @@ def registration(cfg):
     register(
         id='MiniGrid-igridson-16x16-N2-v0',
         entry_point='object_nav.envs:SMGFixedEnv',
-        kwargs={'scene_sampler': scene_sampler, 'scene_evolver': scene_evolver, 'scene': scene, 'env_evolve_freq': -1,
-                'mission_mode': 'int'}
+        kwargs={'scene_sampler': scene_sampler,
+                'scene_evolver': scene_evolver,
+                'scene': scene,
+                'env_evolve_freq': -1,
+                # 'mission_mode': 'int',
+                'set_goal_icon': True}
     )
 
 
