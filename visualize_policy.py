@@ -13,18 +13,19 @@ from mini_behavior.utils.wrappers import MiniBHFullyObsWrapper
 from mini_behavior.register import register
 import os
 import json
+from object_nav import envs
 
 script_dir = os.path.dirname(__file__)
 
 # Parse arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--env",
-                    default="NavigateToObj",
+                    default="igridson",
                     help="name of the environment to be run (REQUIRED)")
-parser.add_argument("--room_size", type=int, default=10)
+parser.add_argument("--room_size", type=int, default=16)
 parser.add_argument("--max_steps", type=int, default=1000)
 parser.add_argument("--dense_reward", action="store_true", default=True)
-parser.add_argument("--seed", type=int, default=20,
+parser.add_argument("--seed", type=int, default=0,
                     help="random seed (default: 0)")
 parser.add_argument("--shift", type=int, default=0,
                     help="number of times the environment is reset at the beginning (default: 0)")
@@ -40,7 +41,7 @@ parser.add_argument("--norend", action="store_true", default=False,
                     help="Whether to render")
 parser.add_argument("--full_obs", action="store_true", default=False,
                     help="Whether to use fully observable wrapper")
-parser.add_argument("--load_model", default="ppo_cnn_partial/MiniGrid-NavigateToObj-10x10-N2-v0.zip",
+parser.add_argument("--load_model", default="ppo_cnn_partial/MiniGrid-igridson-16x16-N2-v0.zip",
                     help="Whether to load from")
 parser.add_argument(
     "--auto_env",
@@ -75,30 +76,12 @@ print(f"Device: {device}\n")
 # Env wrapping
 env_name = f"MiniGrid-{args.env}-{args.room_size}x{args.room_size}-N2-v0"
 
-print(f'register env {args.env}')
-
-kwargs = {"room_size": args.room_size, "max_steps": args.max_steps}
-if args.auto_env:
-    abs_file_path = os.path.join(script_dir, args.auto_env_config)
-    with open(abs_file_path, 'r') as f:
-        initial_dict = json.load(f)
-        kwargs["initial_dict"] = initial_dict
-
-if args.dense_reward:
-    assert args.env in ["PuttingAwayDishesAfterCleaning", "WashingPotsAndPans", "NavigateToObj"]
-    kwargs["dense_reward"] = True
-
-register(
-    id=env_name,
-    entry_point=f'object_nav.envs:{args.env}Env',
-    kwargs=kwargs
-)
-
+print(f'load env {args.env}')
 # Load environment
 env = gym.make(env_name)
-if args.full_obs:
-    env = MiniBHFullyObsWrapper(env)
-env = ImgObsWrapper(env)
+# if args.full_obs:
+#     env = MiniBHFullyObsWrapper(env)
+# env = ImgObsWrapper(env)
 env.seed(args.seed)
 
 for _ in range(args.shift):

@@ -4,7 +4,7 @@ import argparse
 from gym_minigrid.wrappers import *
 from mini_behavior.window import Window
 from mini_behavior.utils.save import save_demo
-from mini_behavior.grid import GridDimension
+# from mini_behavior.grid import GridDimension
 
 import object_nav.envs
 
@@ -25,28 +25,28 @@ def redraw(img):
     window.show_img(img)
 
 
-def render_furniture():
-    global show_furniture
-    show_furniture = not show_furniture
-
-    if show_furniture:
-        img = np.copy(env.furniture_view)
-
-        # i, j = env.agent.cur_pos
-        i, j = env.agent_pos
-        ymin = j * TILE_PIXELS
-        ymax = (j + 1) * TILE_PIXELS
-        xmin = i * TILE_PIXELS
-        xmax = (i + 1) * TILE_PIXELS
-
-        img[ymin:ymax, xmin:xmax, :] = GridDimension.render_agent(
-            img[ymin:ymax, xmin:xmax, :], env.agent_dir)
-        img = env.render_furniture_states(img)
-
-        window.show_img(img)
-    else:
-        obs = env.gen_obs()
-        redraw(obs)
+# def render_furniture():
+#     global show_furniture
+#     show_furniture = not show_furniture
+#
+#     if show_furniture:
+#         img = np.copy(env.furniture_view)
+#
+#         # i, j = env.agent.cur_pos
+#         i, j = env.agent_pos
+#         ymin = j * TILE_PIXELS
+#         ymax = (j + 1) * TILE_PIXELS
+#         xmin = i * TILE_PIXELS
+#         xmax = (i + 1) * TILE_PIXELS
+#
+#         img[ymin:ymax, xmin:xmax, :] = GridDimension.render_agent(
+#             img[ymin:ymax, xmin:xmax, :], env.agent_dir)
+#         img = env.render_furniture_states(img)
+#
+#         window.show_img(img)
+#     else:
+#         obs = env.gen_obs()
+#         redraw(obs)
 
 
 def show_states():
@@ -126,9 +126,9 @@ def key_handler_cartesian(event):
         step(env.actions.forward)
         return
     # Spacebar
-    if event.key == ' ':
-        render_furniture()
-        return
+    # if event.key == ' ':
+    #     render_furniture()
+    #     return
     if event.key == 'pageup':
         step('choose')
         return

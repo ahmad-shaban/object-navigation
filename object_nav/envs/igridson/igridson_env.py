@@ -63,7 +63,7 @@ class SMGFixedEnv(FixedEnv):
 
     def _reward(self):
         if self._end_conditions():
-            return 1000
+            return 10
         else:
             reward = self.rewarder.get_reward(self)
             self.previous_progress = reward
@@ -151,8 +151,8 @@ class SMGFixedEnv(FixedEnv):
             self.graph_to_grid()
             self.initialized = True
         #TODO: Set the mission THIS IS RANDOM AND NEEDS TO GET FIXED
-        self.set_random_mission()
-
+        # self.set_random_mission()
+        self.set_mission("chair")
         # Return first observation
         obs = self.gen_obs()
 
@@ -312,6 +312,7 @@ def registration(cfg):
                 'scene': scene,
                 'env_evolve_freq': -1,
                 # 'mission_mode': 'int',
+                'encode_obs_im': True,
                 'set_goal_icon': True}
     )
 
