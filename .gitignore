@@ -1,0 +1,9 @@
+.venv
+.idea
+__pycache__
+/mini-behavior
+/wandb
+/models
+/runs
+/outputs
+/object_nav/envs/igridson/priors/dataset.pkl

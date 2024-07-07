@@ -1,0 +1,140 @@
+{
+  "Grid": {
+    "mission": "any arbitrary string",
+    "auto": {
+      "room_split_dirs": "should be list contains one or both ['vert', 'horz']",
+      "min_room_dim": "int ... eg. 3",
+      "max_num_room": "int ... eg. 4"
+    },
+    "width": "int ... width of the grid",
+    "height": "int ... height of the grid",
+    "agents": {
+      "pos": "tuple|null ... eg. (2, 1) or null to be randomly placed",
+      "dir": "tuple|null ... eg. (1, 0) or null to be randomly directed"
+    },
+    "rooms": { "_comment": "rooms are nested recursively",
+      "num": "int|null ... number of rooms. null represents random number of rooms",
+      "initial":
+      ["_comment ... list of initial conditions of rooms.. if length of the list is less than number of rooms,it will be used for the first rooms and randomly config the rest rooms",
+        {
+          "top": "tuple|null ... top left corner position of the room, null to be randomly placed",
+          "size": "tuple|null ... size(width, height) of the room, null to be randomly sized",
+          "furnitures":
+          { "_comment": "furnitures are nested recursively",
+            "num": "int|null ... number of furnitures. null represents random number of furnitures",
+            "initial": ["_comment ... list of initial conditions of furnitures.. if length of the list is less than number of furnitures,it will be used for the first furnitures and randomly config the rest furnitures",
+              {
+                "type": "string ... type of the furniture",
+                "state": ["_comment ... list of  available states",
+                  ["string ... state name", "int ... state value"], []],
+                "pos": "tuple|null ... eg. (2, 1) or null to be randomly placed",
+                "objs": { "_comment": "null | objects are nested recursively, if null, random objects will be placed",
+                  "num": "int|null ... number of objects. null represents random number of objects",
+                  "initial": ["_comment ... list of initial conditions of objects.. if length of the list is less than number of objects,it will be used for the first objects and randomly config the rest objects",
+                    {
+                      "type": "string ... type of the object",
+                      "state": ["_comment ... list of states",
+                        ["string ... state name", "int ... state value"]
+                      ],
+                      "pos": "tuple|null ... eg. (2, 1) or null to be randomly placed",
+                      "objs": "null ... objects are not nested"
+                    },
+                    {
+                      "type": "string ... type of the object",
+                      "state": ["_comment ... list of states",
+                        ["string ... state name", "int ... state value"]
+                      ],
+                      "pos": "tuple|null ... eg. (2, 1) or null to be randomly placed",
+                      "objs": "null ... objects are not nested"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "Examples",
+        {
+          "top": null,
+          "size": null,
+          "furnitures": {
+            "num": 5,
+            "initial": [
+              {
+                "type": "bed",
+                "state": [],
+                "pos": null,
+                "objs": null
+              },
+              {
+                "type": "sofa",
+                "state": [["dustyable", 1], ["stainable", 0]],
+                "pos": null,
+                "objs": {
+                  "num": 1,
+                  "initial": [
+                    {
+                      "type": "hardback",
+                      "state": [["dustyable", 0]],
+                      "pos": null,
+                      "objs": null
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "table",
+                "state": [["dustyable", 0], ["stainable", 1]],
+                "pos": null,
+                "objs": null
+              },
+              {
+                "type": "chair",
+                "state":  [["stainable", 0]],
+                "pos": null,
+                "objs":null
+              }
+            ]
+          }
+        },
+        {
+          "top": null,
+          "size": null,
+          "furnitures": {
+            "num": 3,
+            "initial": [
+              {
+                "type": "bed",
+                "state": [["dustyable", 1], ["stainable", 0]],
+                "pos": null,
+                "objs": {
+                  "num": 2,
+                  "initial": [
+                    {
+                      "type": "book",
+                      "state": [["dustyable", 1]],
+                      "pos": null,
+                      "objs": null
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "table",
+                "state": [["dustyable", 0], ["stainable", 1]],
+                "pos": null,
+                "objs": null
+              },
+              {
+                "type": "chair",
+                "state":  [["stainable", 0]],
+                "pos": null,
+                "objs":null
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

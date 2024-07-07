@@ -1,0 +1,96 @@
+{
+  "Grid": {
+    "mission": "HomeSimulation",
+    "auto": {
+      "room_split_dirs": ["vert", "horz"],
+      "min_room_dim": 1,
+      "max_num_room": 1
+    },
+    "width": 12,
+    "height": 12,
+    "agents": {
+      "pos": null,
+      "dir": null
+    },
+    "rooms": {
+      "num": 1,
+      "initial": [
+        {
+          "top": [1, 1],
+          "size": [10, 10],
+          "furnitures": {
+            "num": 4,
+            "initial": [
+              {
+                "type": "bed",
+                "state": [["dustyable", 1], ["stainable", 0]],
+                "pos": null,
+                "objs": {
+                  "num": 2,
+                  "initial": [
+                    {
+                      "type": "book",
+                      "state": [["dustyable", 1]],
+                      "pos": null,
+                      "objs": null
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "sofa",
+                "state": [["dustyable", 1], ["stainable", 0]],
+                "pos": null,
+                "objs": {
+                  "num": 1,
+                  "initial": [
+                    {
+                      "type": "hardback",
+                      "state": [["dustyable", 0]],
+                      "pos": null,
+                      "objs": null
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "table",
+                "state": [["dustyable", 0], ["stainable", 1]],
+                "pos": null,
+                "objs": null
+              },
+              {
+                "type": "electric_refrigerator",
+                "state": [["coldSource", 1], ["dustyable", 0], ["openable", 1], ["stainable", 0]],
+                "pos": null,
+                "objs": {
+                  "num": 3,
+                  "initial": [
+                    {
+                      "type": "sandwich",
+                      "state": [["freezable", 1]],
+                      "pos": null,
+                      "objs": null
+                    },
+                    {
+                      "type": "radish",
+                      "state": [["freezable", 0]],
+                      "pos": null,
+                      "objs": null
+                    },
+                    {
+                      "type": "vegetable_oil",
+                      "state": [["cookable", 1], ["freezable", 0]],
+                      "pos": null,
+                      "objs": null
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

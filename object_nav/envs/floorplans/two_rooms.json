@@ -1,0 +1,85 @@
+{
+  "Grid": {
+    "mission": "NavToObject",
+    "auto": {
+      "room_split_dirs": ["vert", "horz"],
+      "min_room_dim": 5,
+      "max_num_room": 4
+    },
+    "width": 16,
+    "height": 16,
+    "agents": {
+      "pos": null,
+      "dir": null
+    },
+    "rooms": {
+      "num": 2,
+      "initial": [
+        {
+          "top": null,
+          "size": null,
+          "furnitures": {
+            "num": 4,
+            "initial": [
+              {
+                "type": "bed",
+                "state": [],
+                "pos": null,
+                "objs": null
+              },
+              {
+                "type": "ashcan",
+                "state": [["dustyable", 1]],
+                "pos": null,
+                "objs": null
+              },
+              {
+                "type": "table",
+                "state": [["dustyable", 0], ["stainable", 1]],
+                "pos": null,
+                "objs": null
+              }
+            ]
+          }
+        },
+        {
+          "top": null,
+          "size": null,
+          "furnitures": {
+            "num": 3,
+            "initial": [
+              {
+                "type": "chair",
+                "state":  [["stainable", 0]],
+                "pos": null,
+                "objs":null
+              },
+              {
+                "type": "box",
+                "state": [],
+                "pos": null,
+                "objs": null
+              },
+              {
+                "type": "table",
+                "state": [["dustyable", 0], ["stainable", 1]],
+                "pos": null,
+                "objs": {
+                  "num": null,
+                  "initial": [
+                    {
+                      "type": "printer",
+                      "state": [],
+                      "pos": null,
+                      "objs": null
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

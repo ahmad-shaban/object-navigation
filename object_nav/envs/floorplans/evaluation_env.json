@@ -1,0 +1,101 @@
+{
+  "Grid": {
+    "mission": "NavToObject",
+    "auto": {
+      "room_split_dirs": ["vert", "horz"],
+      "min_room_dim": 6,
+      "max_num_room": 4
+    },
+    "width": 30,
+    "height": 30,
+    "agents": {
+      "pos": null,
+      "dir": null
+    },
+    "rooms": {
+      "num": null,
+      "initial": [
+        {
+          "top": null,
+          "size": null,
+          "furnitures": {
+            "num": 5,
+            "initial": [
+              {
+                "type": "bed",
+                "state": [],
+                "pos": null,
+                "objs": null
+              },
+              {
+                "type": "sofa",
+                "state": [["dustyable", 1], ["stainable", 0]],
+                "pos": null,
+                "objs": {
+                  "num": 1,
+                  "initial": [
+                    {
+                      "type": "hardback",
+                      "state": [["dustyable", 0]],
+                      "pos": null,
+                      "objs": null
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "table",
+                "state": [["dustyable", 0], ["stainable", 1]],
+                "pos": null,
+                "objs": null
+              },
+              {
+                "type": "chair",
+                "state":  [["stainable", 0]],
+                "pos": null,
+                "objs":null
+              }
+            ]
+          }
+        },
+        {
+          "top": null,
+          "size": null,
+          "furnitures": {
+            "num": 3,
+            "initial": [
+              {
+                "type": "bed",
+                "state": [["dustyable", 1], ["stainable", 0]],
+                "pos": null,
+                "objs": {
+                  "num": 2,
+                  "initial": [
+                    {
+                      "type": "book",
+                      "state": [["dustyable", 1]],
+                      "pos": null,
+                      "objs": null
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "table",
+                "state": [["dustyable", 0], ["stainable", 1]],
+                "pos": null,
+                "objs": null
+              },
+              {
+                "type": "chair",
+                "state":  [["stainable", 0]],
+                "pos": null,
+                "objs":null
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
