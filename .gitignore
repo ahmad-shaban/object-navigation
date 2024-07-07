@@ -5,3 +5,5 @@ __pycache__
 /wandb
 /models
 /runs
+/outputs
+/object_nav/envs/igridson/priors/dataset.pkl

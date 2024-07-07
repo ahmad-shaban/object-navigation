@@ -96,7 +96,7 @@ class distance_rw(rewarder):
         # 3) assign decreasing values to cells based on the steps away from the goals
         for goal_pos in self.goals_pos:
             # print(goal_pos)
-            self._bfs_custom(goal_pos[0], goal_pos[1], 20)
+            self._bfs_custom(goal_pos[0], goal_pos[1], self.values['goal'])
 
     def _bfs_custom(self, x, y, value):
         step = 1
@@ -113,6 +113,7 @@ class distance_rw(rewarder):
                 new_x, new_y = x + dx, y + dy
                 if (new_x, new_y) in visited_cells:
                     continue
+                visited_cells.add((new_x, new_y))
 
                 if (0 <= new_x < self.grid.shape[1] and 0 <= new_y < self.grid.shape[0]) \
                         and (self.grid[new_x, new_y] not in self.values.values()):
