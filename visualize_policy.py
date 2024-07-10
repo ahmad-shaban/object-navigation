@@ -41,7 +41,7 @@ parser.add_argument("--norend", action="store_true", default=False,
                     help="Whether to render")
 parser.add_argument("--full_obs", action="store_true", default=False,
                     help="Whether to use fully observable wrapper")
-parser.add_argument("--load_model", default="ppo_cnn_partial/MiniGrid-igridson-16x16-N2-v0.zip",
+parser.add_argument("--load_model", default="ppo_cnn_partial/MiniGrid-igridson-16x16-N2-v0-.zip",
                     help="Whether to load from")
 parser.add_argument(
     "--auto_env",
