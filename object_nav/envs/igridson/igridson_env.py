@@ -63,7 +63,7 @@ class SMGFixedEnv(FixedEnv):
 
     def _reward(self):
         if self._end_conditions():
-            return 10
+            return 1
         else:
             reward = self.rewarder.get_reward(self)
             self.previous_progress = reward
