@@ -1,10 +1,12 @@
+#!.venv/bin/python
 import multiprocessing
 
 import gym
 from gym_minigrid.wrappers import ImgObsWrapper
+# from mini_behavior.utils.wrappers import MiniBHFullyObsWrapper
 from mini_behavior.register import register
 import mini_behavior
-from stable_baselines3 import PPO
+from sb3_contrib import RecurrentPPO
 import numpy as np
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
@@ -28,11 +30,11 @@ parser.add_argument("--task", required=False, help='name of task to train on')
 parser.add_argument("--partial_obs", default=True)
 parser.add_argument("--room_size", type=int, default=10)
 parser.add_argument("--max_steps", type=int, default=1000)
-parser.add_argument("--total_timesteps", type=int, default=0.5e5)
+parser.add_argument("--total_timesteps", type=int, default=1e6)
 parser.add_argument("--dense_reward", action="store_true")
 parser.add_argument("--policy_type",
                     # default="CnnPolicy",
-                    default="MultiInputPolicy"
+                    default="MlpLstmPolicy"
                     )
 parser.add_argument(
     "--auto_env",
@@ -137,9 +139,7 @@ class CustomCombinedExtractor(BaseFeaturesExtractor):
         direction = F.one_hot(observations["direction"].long(), num_classes=4).float()
         if len(direction.shape) == 3:
             direction = direction.squeeze(1)
-        encoded_tensor_list.append(direction)
-        # Return a (B, self._features_dim) PyTorch tensor, where B is batch dimension.
-        # print (encoded_tensor_list[0].shape, encoded_tensor_list[1].shape, encoded_tensor_list[2].shape)
+        encoded_tensor_list.append(direction)        # Return a (B, self._features_dim) PyTorch tensor, where B is batch dimension.
         return torch.cat(encoded_tensor_list, dim=1)
 
 
@@ -172,14 +172,14 @@ run = wandb.init(
 )
 
 if __name__ == '__main__':
+    # multiprocessing.freeze_support()  # Add this line
+    # Your code for creating vectorized environment and training here
+
     print('make env')
 
     env = gym.make(env_name)
-    # env = ImgObsWrapper(env)
 
     print('begin training')
-
-
     def clip_range_schedule(progress):
         """
         This function defines a linear decay schedule for the clip range.
@@ -193,9 +193,8 @@ if __name__ == '__main__':
 
         return start_clip_range - (start_clip_range - min_clip_range) * progress
 
-
     # Policy training
-    model = PPO(config["policy_type"], env, clip_range=clip_range_schedule, gamma=0.99, n_steps=128,
+    model = RecurrentPPO(config["policy_type"], env, clip_range=clip_range_schedule, gamma=0.99, n_steps=128,
                 policy_kwargs=policy_kwargs,
                 verbose=1, tensorboard_log=f"./runs/{run.id}")
 
@@ -205,12 +204,15 @@ if __name__ == '__main__':
         # Adjust learning rate based on clip range (example)
         return 0.005 * (1.0 - clip_range)  # Adjust based on your logic
 
+
     model.learning_rate = custom_lr  # Set the custom learning rate scheduler
+
     model.learn(config["total_timesteps"], callback=WandbCallback(model_save_path=f"models/{run.id}"))
 
+    dense_reward = '-'
     if not partial_obs:
-        model.save(f"models/ppo_cnn/{env_name}")
+        model.save(f"models/ppo_cnn/{env_name}{dense_reward}")
     else:
-        model.save(f"models/ppo_cnn_partial/{env_name}")
+        model.save(f"models/ppo_recurrent_dense/{env_name}{dense_reward}")
 
     run.finish()
