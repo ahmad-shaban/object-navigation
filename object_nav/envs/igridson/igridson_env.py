@@ -41,8 +41,9 @@ class SMGFixedEnv(FixedEnv):
         self.set_goal_icon = set_goal_icon
 
         self.rewarder = composite_rw([distance_rw(), steps_rw()])
+        self.max_reward = 100000
 
-        super().__init__(num_objs=num_objs, agent_view_size=7)
+        super().__init__(num_objs=num_objs, agent_view_size=7, max_steps=1000)
 
     def validate_scene(self):
         # Check scene
@@ -63,11 +64,13 @@ class SMGFixedEnv(FixedEnv):
 
     def _reward(self):
         if self._end_conditions():
-            return 1
+            if self.step_count == self.max_steps:
+                return 0
+            return self.max_reward / self.max_reward
         else:
             reward = self.rewarder.get_reward(self)
             self.previous_progress = reward
-            return reward
+            return reward / self.max_reward
 
     def _gen_objs(self):
         super()._gen_objs()

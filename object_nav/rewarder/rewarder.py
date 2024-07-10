@@ -29,19 +29,44 @@ class distance_rw(rewarder):
         self.goals = []
         self.goals_pos = []
         self.agent_pos = None
+        self.forward_pos = None
 
         self.grid: np.array = None
 
     def get_reward(self, env):  # env: NavigateToObj
-        new_agent_pos = env.agent_pos
+        if env.action_done:
+            # Get the position of the agent and in front of it
+            new_agent_pos = env.agent_pos
+            new_fwd_pos = env.front_pos
+
+            compare_pos = new_agent_pos == self.agent_pos
+
+            if compare_pos.all():  # the agent look right or left not moving
+                return min(env.max_reward, self._compass_rw(new_fwd_pos))
+            else:  # if the agent moved forward
+                return min(env.max_reward, self._proximal_rw(new_agent_pos))
+
+        return 0
+
+    def _proximal_rw(self, new_agent_pos):
         value = self.grid[new_agent_pos[1], new_agent_pos[0]] \
                 - self.grid[self.agent_pos[1], self.agent_pos[0]]
         self.agent_pos = new_agent_pos
         if value > 0:
-            value = 1 / value
-            value *= 0.001
+            value *= 0.9
         elif value < 0:
-            value *= -0.0000001
+            value *= -0.1
+        return value
+
+    def _compass_rw(self, new_fwd_pos):
+        value = self.grid[new_fwd_pos[1], new_fwd_pos[0]] \
+                - self.grid[self.forward_pos[1], self.forward_pos[0]]
+
+        self.forward_pos = new_fwd_pos
+        if value > 0:
+            value *= 0.2
+        elif value < 0:
+            value *= -0.01
 
         return value
 
@@ -58,14 +83,13 @@ class distance_rw(rewarder):
         :return:
         """
         self.agent_pos = env.agent_pos
+        self.forward_pos = env.front_pos
         self._build_grid(env)
 
         # show the grid as heat map using matplotlib
         # grid_to_show = self.grid.copy()
         # grid_to_show[self.grid < 0] = 0
         # plt.imshow(grid_to_show, cmap='spring', interpolation='nearest')
-        # plt.show()
-        # print(self.grid)
 
     def _build_grid(self, env):
         """
@@ -75,7 +99,7 @@ class distance_rw(rewarder):
         """
         self.grid = np.zeros((env.height, env.width))
 
-        self.values = {'obstacle': -20, 'goal': env.width * env.height}
+        self.values = {'obstacle': -20, 'goal': env.width * env.height / 2}
 
         # 1) assign -20 for all cells containing obstacles
         for i in range(env.width):
@@ -112,11 +136,9 @@ class distance_rw(rewarder):
                 if (0 <= new_x < self.grid.shape[1] and 0 <= new_y < self.grid.shape[0]) \
                         and (self.grid[new_x, new_y] not in self.values.values()):
                     # check if the value is larger than the current value
-                    if self.grid[new_x, new_y] < value - step:
-                        if step == 1:
-                            self.grid[new_x, new_y] = value + 1 if value + 1 > 0 else 0
-                        else:
-                            self.grid[new_x, new_y] = value - 2 ** (step - 1) if value - 2 ** (step - 1) > 0 else 0
+                    grade = 2 * value / step
+                    if self.grid[new_x, new_y] < grade:
+                        self.grid[new_x, new_y] = grade
                     queue.append({"pt": (new_x, new_y), "step": step + 1})
 
 
@@ -126,9 +148,9 @@ class steps_rw(rewarder):
 
     def get_reward(self, env):  # env: NavigateToObj
         if not env.action_done:
-            return -0.005
+            return -20
         else:
-            return -0.00001
+            return -1
 
     def reset(self, env):  # env: NavigateToObj
         pass
