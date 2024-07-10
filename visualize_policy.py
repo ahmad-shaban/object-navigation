@@ -9,7 +9,7 @@ from stable_baselines3 import PPO
 
 # For RL visualization
 from gym_minigrid.wrappers import ImgObsWrapper
-from mini_behavior.utils.wrappers import MiniBHFullyObsWrapper
+# from mini_behavior.utils.wrappers import MiniBHFullyObsWrapper
 from mini_behavior.register import register
 import os
 import json

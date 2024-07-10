@@ -1,6 +1,8 @@
+import multiprocessing
+
 import gym
 from gym_minigrid.wrappers import ImgObsWrapper
-from mini_behavior.utils.wrappers import MiniBHFullyObsWrapper
+# from mini_behavior.utils.wrappers import MiniBHFullyObsWrapper
 from mini_behavior.register import register
 import mini_behavior
 from stable_baselines3 import PPO
@@ -21,7 +23,6 @@ import torch.nn.functional as F
 import os
 
 script_dir = os.path.dirname(__file__)
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--task", required=False, help='name of task to train on')
@@ -99,23 +100,83 @@ class MinigridFeaturesExtractor(BaseFeaturesExtractor):
         # Extract features from the image
         image, direction, mission = observations["image"], observations["direction"], observations["mission"]
         image_features = self.cnn(image)
+        # convert direction value into one-hot vector
+        direction = F.one_hot(direction, num_classes=4)
         direction = direction.unsqueeze(0) if len(list(direction.shape)) < 2 else direction
         # print(image_features.shape, mission.shape, direction.shape)
 
         # Concatenate features with one-hot encoded mission and direction
-        concatenated_features = torch.cat((image_features, mission, direction.float()), dim=1)
+        concatenated_features = torch.cat((image_features, mission, direction), dim=1)
 
         return self.linear(concatenated_features)
 
 
+class CustomCombinedExtractor(BaseFeaturesExtractor):
+    def __init__(self, observation_space: gym.spaces.Dict):
+        # We do not know features-dim here before going over all the items,
+        # so put something dummy for now. PyTorch requires calling
+        # nn.Module.__init__ before adding modules
+        super().__init__(observation_space, features_dim=128)
+
+        extractors = {}
+
+        total_concat_size = 0
+        # We need to know size of the output of this extractor,
+        # so go over all the spaces and compute output feature sizes
+        for key, subspace in observation_space.spaces.items():
+            if key == "image":
+                # We will just downsample one channel of the image by 4x4 and flatten.
+                # Assume the image is single-channel (subspace.shape[0] == 0)
+                n_input_channels = subspace.shape[0]
+                extractors[key] = nn.Sequential(
+                    nn.Conv2d(n_input_channels, 32, (2, 2)),
+                    nn.ReLU(),
+                    nn.Conv2d(32, 32, (2, 2)),
+                    nn.ReLU(),
+                    nn.Conv2d(32, 64, (2, 2)),
+                    nn.ReLU(),
+                    nn.Flatten(),
+                )
+                # Compute shape by doing one forward pass
+                with torch.no_grad():
+                    n_flatten = extractors[key](torch.as_tensor(observation_space['image'].sample()[None]).float()).shape[1]
+                total_concat_size += n_flatten
+            elif key == "mission":
+                # Run through a simple MLP
+                extractors[key] = nn.Linear(subspace.shape[0], 32)
+                total_concat_size += 32
+            elif key == "direction":
+                extractors[key] = nn.Linear(1, out_features=4)
+                total_concat_size += 4
+
+        self.extractors = nn.ModuleDict(extractors)
+
+        # Update the features dim manually
+        self._features_dim = total_concat_size
+
+    def forward(self, observations) -> torch.Tensor:
+        encoded_tensor_list = []
+
+        # self.extractors contain nn.Modules that do all the processing.
+        for key, extractor in self.extractors.items():
+            out = extractor(observations[key])
+            out = out.unsqueeze(0) if len(list(out.shape)) < 2 else out
+            encoded_tensor_list.append(out)
+
+        # Return a (B, self._features_dim) PyTorch tensor, where B is batch dimension.
+        return torch.cat(encoded_tensor_list, dim=1)
+
+
+# policy_kwargs = dict(
+#     features_extractor_class=MinigridFeaturesExtractor,
+#     features_extractor_kwargs=dict(features_dim=128),
+# )
 policy_kwargs = dict(
-    features_extractor_class=MinigridFeaturesExtractor,
-    features_extractor_kwargs=dict(features_dim=128),
+    features_extractor_class=CustomCombinedExtractor
 )
 
 # Env wrapping
 env_name = "MiniGrid-igridson-16x16-N2-v0"
-
 
 # wandb init
 config = {
@@ -134,23 +195,32 @@ run = wandb.init(
     save_code=True,  # optional
 )
 
-print('make env')
+if __name__ == '__main__':
+    # multiprocessing.freeze_support()  # Add this line
+    # Your code for creating vectorized environment and training here
 
-env = gym.make(env_name)
-# if not args.partial_obs:
-#     env = MiniBHFullyObsWrapper(env)
-# env = ImgObsWrapper(env)
-# Wrap the environment in a vectorized environment for faster training
-# env = SubprocVecEnv(lambda: env, n_envs=4)  # Adjust number of environments as needed
+    print('make env')
 
-print('begin training')
-# Policy training
-model = PPO(config["policy_type"], env, learning_rate=0.005, ent_coef=0.15, n_steps=512, policy_kwargs=policy_kwargs, verbose=1, tensorboard_log=f"./runs/{run.id}")
-model.learn(config["total_timesteps"], callback=WandbCallback(model_save_path=f"models/{run.id}"))
+    env = gym.make(env_name)
+    # if not args.partial_obs:
+    #     env = MiniBHFullyObsWrapper(env)
+    # env = ImgObsWrapper(env)
+    # Wrap the environment in a vectorized environment for faster training
+    # Using SubprocVecEnv (multi-process)
+    num_envs = 4  # Adjust this based on your CPU cores
+    # env = SubprocVecEnv([lambda: env for _ in range(num_envs)])
 
-if not partial_obs:
-    model.save(f"models/ppo_cnn/{env_name}")
-else:
-    model.save(f"models/ppo_cnn_partial/{env_name}")
+    print('begin training')
+    # Policy training
+    model = PPO(config["policy_type"], env, learning_rate=0.005, ent_coef=0.15, n_steps=512,
+                policy_kwargs=policy_kwargs,
+                verbose=1, tensorboard_log=f"./runs/{run.id}")
+    model.learn(config["total_timesteps"], callback=WandbCallback(model_save_path=f"models/{run.id}"))
 
-run.finish()
+    dense_reward = '-'
+    if not partial_obs:
+        model.save(f"models/ppo_cnn/{env_name}{dense_reward}")
+    else:
+        model.save(f"models/ppo_cnn_partial/{env_name}{dense_reward}")
+
+    run.finish()

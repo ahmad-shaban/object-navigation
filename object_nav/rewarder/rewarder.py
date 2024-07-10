@@ -38,9 +38,11 @@ class distance_rw(rewarder):
                 - self.grid[self.agent_pos[1], self.agent_pos[0]]
         self.agent_pos = new_agent_pos
         if value > 0:
-            value *= 0.9
+            value = 1 / value
+            value *= 0.001
         elif value < 0:
-            value *= 0.5
+            value *= -0.0000001
+
         return value
 
     def reset(self, env):  # env: NavigateToObj
@@ -73,7 +75,7 @@ class distance_rw(rewarder):
         """
         self.grid = np.zeros((env.height, env.width))
 
-        self.values = {'obstacle': -20, 'goal': env.width + env.height}
+        self.values = {'obstacle': -20, 'goal': env.width * env.height}
 
         # 1) assign -20 for all cells containing obstacles
         for i in range(env.width):
@@ -111,7 +113,10 @@ class distance_rw(rewarder):
                         and (self.grid[new_x, new_y] not in self.values.values()):
                     # check if the value is larger than the current value
                     if self.grid[new_x, new_y] < value - step:
-                        self.grid[new_x, new_y] = value - step if value - step > 0 else 0
+                        if step == 1:
+                            self.grid[new_x, new_y] = value + 1 if value + 1 > 0 else 0
+                        else:
+                            self.grid[new_x, new_y] = value - 2 ** (step - 1) if value - 2 ** (step - 1) > 0 else 0
                     queue.append({"pt": (new_x, new_y), "step": step + 1})
 
 
@@ -121,9 +126,9 @@ class steps_rw(rewarder):
 
     def get_reward(self, env):  # env: NavigateToObj
         if not env.action_done:
-            return -0.5
+            return -0.005
         else:
-            return -0.01
+            return -0.00001
 
     def reset(self, env):  # env: NavigateToObj
         pass
