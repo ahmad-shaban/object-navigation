@@ -3,6 +3,8 @@
 import os
 import pickle as pkl
 from enum import IntEnum
+
+import numpy as np
 from gym import spaces
 from gym_minigrid.minigrid import MiniGridEnv
 # from bddl.actions import ACTION_FUNC_MAPPING
@@ -416,7 +418,7 @@ class MiniBehaviorEnv(MiniGridEnv):
         # - an embedding for the mission string (instructions for the agent)
         # GEN_OBS_2
         obs = {
-            'image': image,
+            'image': np.transpose(image, (2, 0, 1)),
             'direction': np.array(self.agent_dir, dtype=np.uint8),
             'mission': self.mission
         }

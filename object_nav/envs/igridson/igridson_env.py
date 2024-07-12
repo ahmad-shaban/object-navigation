@@ -60,6 +60,7 @@ class SMGFixedEnv(FixedEnv):
         # if env_evolve_freq = -1, don't evolve env during steps, only during resets
         if self.step_count > 1 and self.env_evolove_freq != -1 and self.step_count % self.env_evolove_freq == 0:
             self.evolve()
+        # print(obs['image'].shape)
         return obs, reward, done, info
 
     def _reward(self):
@@ -95,14 +96,14 @@ class SMGFixedEnv(FixedEnv):
             image_observation_space = spaces.Box(
                 low=0,
                 high=255,
-                shape=(self.agent_view_size, self.agent_view_size, 3),
+                shape=(3, self.agent_view_size, self.agent_view_size),
                 dtype=np.uint8
             )
         else:
             image_observation_space = spaces.Box(
                 low=0,
                 high=255,
-                shape=(self.agent_view_size * TILE_PIXELS, self.agent_view_size * TILE_PIXELS, 3),
+                shape=(3, self.agent_view_size * TILE_PIXELS, self.agent_view_size * TILE_PIXELS),
                 dtype=np.uint8
             )
 
