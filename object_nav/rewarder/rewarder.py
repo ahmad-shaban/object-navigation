@@ -72,6 +72,7 @@ class distance_rw(rewarder):
                 x = self._proximal_rw()
                 # print(f'proximal reward: {x}')
 
+        # update the agent values
         self.agent_pos = self.new_agent_pos
         self.forward_pos = self.new_forward_pos
 

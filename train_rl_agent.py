@@ -100,8 +100,6 @@ class CustomCombinedExtractor(BaseFeaturesExtractor):
         # so go over all the spaces and compute output feature sizes
         for key, subspace in observation_space.spaces.items():
             if key == "image":
-                # We will just downsample one channel of the image by 4x4 and flatten.
-                # Assume the image is single-channel (subspace.shape[0] == 0)
                 n_input_channels = subspace.shape[0]
                 extractors[key] = nn.Sequential(
                     nn.Conv2d(n_input_channels, 32, (2, 2)),
