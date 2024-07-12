@@ -202,17 +202,16 @@ if __name__ == '__main__':
     def custom_lr(progress):
         clip_range = clip_range_schedule(progress)
         # Adjust learning rate based on clip range (example)
-        return 0.005 * (1.0 - clip_range)  # Adjust based on your logic
+        return 0.05 * (1.0 - clip_range)  # Adjust based on your logic
 
 
     model.learning_rate = custom_lr  # Set the custom learning rate scheduler
 
     model.learn(config["total_timesteps"], callback=WandbCallback(model_save_path=f"models/{run.id}"))
 
-    dense_reward = '-'
     if not partial_obs:
-        model.save(f"models/ppo_cnn/{env_name}{dense_reward}")
+        model.save(f"models/ppo_cnn/{env_name}")
     else:
-        model.save(f"models/ppo_recurrent_dense/{env_name}{dense_reward}")
+        model.save(f"models/ppo_recurrent_dense/{env_name}")
 
     run.finish()

@@ -31,43 +31,69 @@ class distance_rw(rewarder):
         self.agent_pos = None
         self.forward_pos = None
 
+        self.new_agent_pos = None
+        self.new_forward_pos = None
+
         self.grid: np.array = None
 
-    def get_reward(self, env):  # env: NavigateToObj
-        if env.action_done:
-            # Get the position of the agent and in front of it
-            new_agent_pos = env.agent_pos
-            new_fwd_pos = env.front_pos
+    # def get_reward(self, env):  # env: NavigateToObj
+    #     if env.action_done:
+    #         # Get the position of the agent and in front of it
+    #         new_agent_pos = env.agent_pos
+    #         new_fwd_pos = env.front_pos
+    #
+    #         compare_pos = new_agent_pos == self.agent_pos
+    #
+    #         if compare_pos.all():  # the agent look right or left not moving
+    #             return min(env.max_reward, self._compass_rw(new_fwd_pos))
+    #         else:  # if the agent moved forward
+    #             return min(env.max_reward, self._proximal_rw(new_agent_pos))
+    #
+    #     return 0
 
-            compare_pos = new_agent_pos == self.agent_pos
+    def get_reward(self, env):  # env: NavigateToObj
+        # Get the position of the agent and in front of it
+        self.new_agent_pos = env.agent_pos
+        self.new_forward_pos = env.front_pos
+
+        x = 0
+        if env.action_done:
+            compare_pos = self.new_agent_pos == self.agent_pos
+            # print(f"new_agent_pos: {self.new_agent_pos}")
+            # print(f"old_agent_pos: {self.agent_pos}")
+            # print(compare_pos)
+            # print(f'\nnew_forward_pos: {self.new_forward_pos}')
+            # print(f'old_forward_pos: {self.forward_pos}\n')
 
             if compare_pos.all():  # the agent look right or left not moving
-                return min(env.max_reward, self._compass_rw(new_fwd_pos))
+                x = self._compass_rw()
+                # print(f"compass reward: {x}")
             else:  # if the agent moved forward
-                return min(env.max_reward, self._proximal_rw(new_agent_pos))
+                x = self._proximal_rw()
+                # print(f'proximal reward: {x}')
 
-        return 0
+        self.agent_pos = self.new_agent_pos
+        self.forward_pos = self.new_forward_pos
 
-    def _proximal_rw(self, new_agent_pos):
-        value = self.grid[new_agent_pos[1], new_agent_pos[0]] \
+        return min(env.max_reward, x)
+
+    def _proximal_rw(self):
+        value = self.grid[self.new_agent_pos[1], self.new_agent_pos[0]] \
                 - self.grid[self.agent_pos[1], self.agent_pos[0]]
-        self.agent_pos = new_agent_pos
         if value > 0:
             value *= 0.9
         elif value < 0:
             value *= -0.1
         return value
 
-    def _compass_rw(self, new_fwd_pos):
-        value = self.grid[new_fwd_pos[1], new_fwd_pos[0]] \
+    def _compass_rw(self):
+        value = self.grid[self.new_forward_pos[1], self.new_forward_pos[0]] \
                 - self.grid[self.forward_pos[1], self.forward_pos[0]]
 
-        self.forward_pos = new_fwd_pos
         if value > 0:
             value *= 0.2
         elif value < 0:
             value *= -0.01
-
         return value
 
     def reset(self, env):  # env: NavigateToObj
@@ -84,6 +110,8 @@ class distance_rw(rewarder):
         """
         self.agent_pos = env.agent_pos
         self.forward_pos = env.front_pos
+        self.new_agent_pos = None
+        self.new_forward_pos = None
         self._build_grid(env)
 
         # show the grid as heat map using matplotlib

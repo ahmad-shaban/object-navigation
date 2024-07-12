@@ -41,7 +41,7 @@ class SMGFixedEnv(FixedEnv):
         self.set_goal_icon = set_goal_icon
 
         self.rewarder = composite_rw([distance_rw(), steps_rw()])
-        self.max_reward = 100000
+        self.max_reward = 1000
 
         super().__init__(num_objs=num_objs, agent_view_size=7, max_steps=1000)
 
